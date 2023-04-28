@@ -1,76 +1,70 @@
-const form = document.forms.todoForm;
-const input = form.elements.inputTodo;
+const form = document.querySelector('form[name="todoForm"]');
+const inputTodo = document.querySelector('input[name="inputTodo"]');
 const listTodo = document.querySelector(".list");
-const listBtn = document.querySelectorAll(".list-btn button");
 const todoList = [];
 
-form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    getInput();
-    console.log(todoList);
-    input.value = "";
-});
+form.addEventListener("submit", handleSubmit);
+listTodo.addEventListener("click", handleListClick);
 
-function getInput() {
-    const userInput = input.value;
-    if (input !== "" && input !== null) {
-        todoList.push(userInput);
-        todoView(userInput);
+function handleSubmit(event) {
+    event.preventDefault();
+    const userInput = inputTodo.value.trim();
+    if (userInput === "") {
+        showError("Todo belum di isi");
     } else {
-        alert("Todo belum di isi");
+        addTodoToList(userInput);
+        inputTodo.value = "";
     }
 }
 
-function todoView(newInput) {
+function addTodoToList(todo) {
     const li = document.createElement("li");
-    const text = document.createTextNode(newInput);
-    const todoText = document.createElement("span");
-    const btnWrap = document.createElement("span");
+    const span = document.createElement("span");
+    span.textContent = todo;
+    li.appendChild(span);
 
-    btnWrap.classList = "list-btn";
+    const btnWrap = document.createElement("span");
+    btnWrap.classList.add("list-btn");
 
     const hapusBtn = document.createElement("button");
     hapusBtn.setAttribute("type", "button");
-    hapusBtn.setAttribute("id", "hapus-btn");
+    hapusBtn.setAttribute("data-action", "hapus");
     hapusBtn.textContent = "Hapus";
+    btnWrap.appendChild(hapusBtn);
 
     const ubahBtn = document.createElement("button");
     ubahBtn.setAttribute("type", "button");
-    ubahBtn.setAttribute("id", "ubah-btn");
+    ubahBtn.setAttribute("data-action", "ubah");
     ubahBtn.textContent = "Ubah";
+    btnWrap.appendChild(ubahBtn);
 
-    todoText.addEventListener("click", function (e) {
-        e.target.classList.toggle("selesai");
-    });
+    li.appendChild(btnWrap);
+    listTodo.appendChild(li);
 
-    hapusBtn.addEventListener("click", function (e) {
-        e.target.parentElement.parentElement.remove();
-    });
+    todoList.push(todo);
+}
 
-    ubahBtn.addEventListener("click", function (e) {
-        const text =
-            e.target.parentElement.parentElement.firstChild.textContent;
-        const index = todoList.indexOf(text);
+function handleListClick(event) {
+    if (event.target.tagName === "BUTTON") {
+        const action = event.target.getAttribute("data-action");
+        const li = event.target.closest("li");
+        const span = li.querySelector("span");
 
-        if (index > -1) {
-            const newInput = prompt("Masukkan todo baru", text);
-            if (newInput !== null && newInput !== "") {
-                todoList[index] = newInput;
-                const todoText =
-                    e.target.parentElement.parentElement.firstChild;
-                todoText.textContent = newInput;
+        if (action === "hapus") {
+            li.remove();
+            todoList.splice(todoList.indexOf(span.textContent), 1);
+        } else if (action === "ubah") {
+            const newTodo = prompt("Masukkan todo baru", span.textContent);
+            if (newTodo !== null && newTodo !== "") {
+                span.textContent = newTodo;
+                todoList.splice(todoList.indexOf(span.textContent), 1, newTodo);
             }
         }
-    });
+    } else if (event.target.tagName === "SPAN") {
+        event.target.classList.toggle("selesai");
+    }
+}
 
-    todoText.appendChild(text);
-    li.appendChild(todoText);
-
-    btnWrap.appendChild(hapusBtn);
-    li.appendChild(btnWrap);
-
-    btnWrap.appendChild(ubahBtn);
-    li.appendChild(btnWrap);
-
-    listTodo.appendChild(li);
+function showError(message) {
+    alert(message);
 }
